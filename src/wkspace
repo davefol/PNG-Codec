@@ -1,0 +1,164 @@
+let SessionLoad = 1
+let s:so_save = &g:so | let s:siso_save = &g:siso | setg so=0 siso=0 | setl so=-1 siso=-1
+let v:this_session=expand("<sfile>:p")
+silent only
+silent tabonly
+cd ~/git/png_decoder/src
+if expand('%') == '' && !&modified && line('$') <= 1 && getline(1) == ''
+  let s:wipebuf = bufnr('%')
+endif
+set shortmess=aoO
+argglobal
+%argdel
+$argadd IDAT.cpp
+edit IDAT.h
+let s:save_splitbelow = &splitbelow
+let s:save_splitright = &splitright
+set splitbelow splitright
+wincmd _ | wincmd |
+vsplit
+1wincmd h
+wincmd _ | wincmd |
+split
+1wincmd k
+wincmd w
+wincmd w
+wincmd _ | wincmd |
+split
+1wincmd k
+wincmd w
+let &splitbelow = s:save_splitbelow
+let &splitright = s:save_splitright
+wincmd t
+let s:save_winminheight = &winminheight
+let s:save_winminwidth = &winminwidth
+set winminheight=0
+set winheight=1
+set winminwidth=0
+set winwidth=1
+exe '1resize ' . ((&lines * 23 + 24) / 48)
+exe 'vert 1resize ' . ((&columns * 75 + 75) / 150)
+exe '2resize ' . ((&lines * 22 + 24) / 48)
+exe 'vert 2resize ' . ((&columns * 75 + 75) / 150)
+exe '3resize ' . ((&lines * 23 + 24) / 48)
+exe 'vert 3resize ' . ((&columns * 74 + 75) / 150)
+exe '4resize ' . ((&lines * 22 + 24) / 48)
+exe 'vert 4resize ' . ((&columns * 74 + 75) / 150)
+argglobal
+setlocal fdm=manual
+setlocal fde=0
+setlocal fmr={{{,}}}
+setlocal fdi=#
+setlocal fdl=0
+setlocal fml=1
+setlocal fdn=20
+setlocal fen
+silent! normal! zE
+let &fdl = &fdl
+let s:l = 15 - ((14 * winheight(0) + 11) / 23)
+if s:l < 1 | let s:l = 1 | endif
+keepjumps exe s:l
+normal! zt
+keepjumps 15
+normal! 021|
+lcd ~/git/png_decoder/src
+wincmd w
+argglobal
+if bufexists("~/git/png_decoder/src/IDAT.cpp") | buffer ~/git/png_decoder/src/IDAT.cpp | else | edit ~/git/png_decoder/src/IDAT.cpp | endif
+if &buftype ==# 'terminal'
+  silent file ~/git/png_decoder/src/IDAT.cpp
+endif
+setlocal fdm=manual
+setlocal fde=0
+setlocal fmr={{{,}}}
+setlocal fdi=#
+setlocal fdl=0
+setlocal fml=1
+setlocal fdn=20
+setlocal fen
+silent! normal! zE
+let &fdl = &fdl
+let s:l = 7 - ((6 * winheight(0) + 11) / 22)
+if s:l < 1 | let s:l = 1 | endif
+keepjumps exe s:l
+normal! zt
+keepjumps 7
+normal! 05|
+wincmd w
+argglobal
+if bufexists("~/git/png_decoder/src/ZlibStream.h") | buffer ~/git/png_decoder/src/ZlibStream.h | else | edit ~/git/png_decoder/src/ZlibStream.h | endif
+if &buftype ==# 'terminal'
+  silent file ~/git/png_decoder/src/ZlibStream.h
+endif
+setlocal fdm=manual
+setlocal fde=0
+setlocal fmr={{{,}}}
+setlocal fdi=#
+setlocal fdl=0
+setlocal fml=1
+setlocal fdn=20
+setlocal fen
+silent! normal! zE
+let &fdl = &fdl
+let s:l = 14 - ((13 * winheight(0) + 11) / 23)
+if s:l < 1 | let s:l = 1 | endif
+keepjumps exe s:l
+normal! zt
+keepjumps 14
+normal! 015|
+lcd ~/git/png_decoder/src
+wincmd w
+argglobal
+if bufexists("~/git/png_decoder/src/ZlibStream.cpp") | buffer ~/git/png_decoder/src/ZlibStream.cpp | else | edit ~/git/png_decoder/src/ZlibStream.cpp | endif
+if &buftype ==# 'terminal'
+  silent file ~/git/png_decoder/src/ZlibStream.cpp
+endif
+balt ~/git/png_decoder/src/ZlibStream.h
+setlocal fdm=manual
+setlocal fde=0
+setlocal fmr={{{,}}}
+setlocal fdi=#
+setlocal fdl=0
+setlocal fml=1
+setlocal fdn=20
+setlocal fen
+silent! normal! zE
+let &fdl = &fdl
+let s:l = 3 - ((2 * winheight(0) + 11) / 22)
+if s:l < 1 | let s:l = 1 | endif
+keepjumps exe s:l
+normal! zt
+keepjumps 3
+normal! 0
+lcd ~/git/png_decoder/src
+wincmd w
+exe '1resize ' . ((&lines * 23 + 24) / 48)
+exe 'vert 1resize ' . ((&columns * 75 + 75) / 150)
+exe '2resize ' . ((&lines * 22 + 24) / 48)
+exe 'vert 2resize ' . ((&columns * 75 + 75) / 150)
+exe '3resize ' . ((&lines * 23 + 24) / 48)
+exe 'vert 3resize ' . ((&columns * 74 + 75) / 150)
+exe '4resize ' . ((&lines * 22 + 24) / 48)
+exe 'vert 4resize ' . ((&columns * 74 + 75) / 150)
+tabnext 1
+badd +10 ~/git/png_decoder/src/IDAT.cpp
+badd +9 ~/git/png_decoder/src/ZlibStream.h
+badd +0 ~/git/png_decoder/src/ZlibStream.cpp
+badd +0 ~/git/png_decoder/src/IDAT.h
+if exists('s:wipebuf') && len(win_findbuf(s:wipebuf)) == 0 && getbufvar(s:wipebuf, '&buftype') isnot# 'terminal'
+  silent exe 'bwipe ' . s:wipebuf
+endif
+unlet! s:wipebuf
+set winheight=1 winwidth=20 shortmess=filnxtToOF
+let &winminheight = s:save_winminheight
+let &winminwidth = s:save_winminwidth
+let s:sx = expand("<sfile>:p:r")."x.vim"
+if filereadable(s:sx)
+  exe "source " . fnameescape(s:sx)
+endif
+let &g:so = s:so_save | let &g:siso = s:siso_save
+set hlsearch
+nohlsearch
+doautoall SessionLoadPost
+unlet SessionLoad
+" vim: set ft=vim :
