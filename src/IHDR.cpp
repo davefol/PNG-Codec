@@ -1,6 +1,9 @@
 #include <iostream>
 #include "IHDR.h"
 #include "consume.h"
+#include "ImagePartial.h"
+
+#define DEBUG 1
 
 void IHDR::print() {
     std::cout << "IHDR:" << std::endl;
@@ -12,6 +15,7 @@ void IHDR::print() {
     std::cout << "\tfiller_method: " << (int)filler_method << std::endl;
     std::cout << "\tinterlace_method: " << (int)interlace_method << std::endl;
 }
+
 IHDR::IHDR(uint32_t _size, std::string _name, std::vector<uint8_t>::iterator &buffer_it) {
     size = _size;
     name = _name;
@@ -23,4 +27,18 @@ IHDR::IHDR(uint32_t _size, std::string _name, std::vector<uint8_t>::iterator &bu
     filler_method = consume_uint8_t(buffer_it),
     interlace_method = consume_uint8_t(buffer_it),
     advance(buffer_it, 4);
+}
+
+void IHDR::modify(ImagePartial& image_partial) {
+   image_partial.width = width;
+   image_partial.height = height;
+   image_partial.bit_depth = bit_depth;
+   image_partial.color_type = color_type;
+   image_partial.compression_method = compression_method;
+   image_partial.filler_method = filler_method;
+   image_partial.interlace_method = interlace_method;
+   image_partial.next_pixel_pos = {0, 0};
+
+   // allocate space for the actual image data
+   image_partial.image_data.resize(height, std::vector<uint32_t>(width));
 }

@@ -16,4 +16,8 @@ IDAT::IDAT(uint32_t _size, std::string _name, std::vector<uint8_t>::iterator &bu
 void IDAT::print() {
 };
 
-
+void IDAT::modify(ImagePartial& image_partial) {
+    for (auto raw_byte : uncompressed_bytes) {
+        image_partial.set_next_pixel(raw_byte);
+    }
+}

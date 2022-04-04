@@ -16,3 +16,7 @@ UnknownChunk::UnknownChunk(uint32_t _size, std::string _name, std::vector<uint8_
 void UnknownChunk::print() {
     std::cout << "UnknownChunk(size=" << size << ", name=" << name << ")" << std::endl;
 }
+
+void UnknownChunk::modify(ImagePartial& image_partial) {
+
+}

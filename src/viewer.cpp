@@ -10,6 +10,8 @@
 #include "IDAT.h"
 #include "UnknownChunk.h"
 #include "consume.h"
+#include "huffmanutils.h"
+#include "ImagePartial.h"
 
 using namespace std;
 
@@ -31,9 +33,9 @@ void set_pixel(SDL_Surface *surface, int x, int y, uint32_t pixel)
   *target_pixel = pixel;
 }
 
-void set_pixels(SDL_Surface *surface, uint32_t img[][SCREEN_WIDTH]) {
-    for (int y = 0; y < SCREEN_HEIGHT; y++)
-        for (int x = 0; x < SCREEN_WIDTH; x++)
+void set_pixels(SDL_Surface *surface, vector<vector<uint32_t>> img) {
+    for (int y = 0; y < img.size(); y++)
+        for (int x = 0; x < img[y].size(); x++)
             set_pixel(surface, x, y, img[y][x]);
 }
 
@@ -81,7 +83,7 @@ unique_ptr<Chunk> consume_chunk(vector<uint8_t>::iterator &buffer_it) {
     // read CRC
 }
 
-void display_image() {
+void display_image(vector<vector<uint32_t>> img) {
     // ======================================
     // --------- Displaying Image -----------
     // ======================================
@@ -92,12 +94,6 @@ void display_image() {
     // 0xFF0000FF is blue
     // 0x __ RR GG BB
     // Demo image
-    uint32_t img[SCREEN_HEIGHT][SCREEN_WIDTH] = {{0}};
-
-    for (int x = 100; x < 150; x++) 
-        for(int y = 100; y < 150; y++)
-            img[y][x] = 0xFF0000FF;
-
     SDL_Window* window = NULL;
     SDL_Surface* surface = NULL;
     if (SDL_Init( SDL_INIT_VIDEO) < 0) {
@@ -107,8 +103,8 @@ void display_image() {
             "PNG Viewer",
             SDL_WINDOWPOS_UNDEFINED,
             SDL_WINDOWPOS_UNDEFINED,
-            SCREEN_WIDTH,
-            SCREEN_HEIGHT,
+            img[0].size(),
+            img.size(),
             SDL_WINDOW_SHOWN
         );
 
@@ -169,12 +165,19 @@ int main(int argc, char* args[]) {
         cout << "Consumed PNG header (8 bytes)\n";
 #endif
 
+    ImagePartial image_partial = {
+        
+    };
     while (buffer_it != buffer.end()) {
         auto chunk_ptr = consume_chunk(buffer_it);
         cout << "Chunk name: " << chunk_ptr->name << endl;
         cout << "Chunk size: " << chunk_ptr->size << endl;
         chunk_ptr->print();
+        chunk_ptr->modify(image_partial);
         cout << endl;
     }
+    // after the above while loop
+    // image partial should be a well behaved in memory image
+    display_image(image_partial.get_image());
     return 0;
 }

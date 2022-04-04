@@ -2,6 +2,7 @@
 #include <string>
 #include <vector>
 #include "Chunk.h"
+#include "ImagePartial.h"
 
 #pragma once
 
@@ -17,4 +18,5 @@ class IHDR : public Chunk {
     public:
         IHDR(uint32_t _size, std::string _name, std::vector<uint8_t>::iterator &buffer_it);
         void print();
+        void modify(ImagePartial& image_partial);
 };
