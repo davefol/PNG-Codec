@@ -2,7 +2,7 @@
 #include <vector>
 #include <iostream>
 #include <fstream>
-#include <SDL2/SDL.h>
+#include "SDL.h"
 #include <string>
 
 #include "Chunk.h"
@@ -143,7 +143,7 @@ void display_image(vector<vector<uint32_t>> img) {
 
 int main(int argc, char* args[]) {
 
-    ifstream input("./examples/minimal.png", ios::binary);
+    ifstream input("./examples/smile.png", ios::binary);
     vector<uint8_t> buffer(std::istreambuf_iterator<char>(input), {});
     cout << "size of image " << buffer.size() << endl;
 

@@ -5,12 +5,12 @@
 #include "consume.h"
 #include "zlibutils.h"
 #include "deflateutils.h"
+#include "dumputils.h"
 
 #define DEBUG 1
 
 
 std::vector<uint8_t> uncompress_zlib_stream(int size, std::vector<uint8_t>::iterator &buffer_it) {
-
     uint8_t compression_method = consume_uint8_t(buffer_it);   
     uint8_t flags = consume_uint8_t(buffer_it);
 
@@ -47,9 +47,11 @@ std::vector<uint8_t> uncompress_zlib_stream(int size, std::vector<uint8_t>::iter
     if (fdict) {
         //uint32_t dictid = consume_uint32_t(buffer_it);
         consume_uint32_t(buffer_it);
+        dump_bytes("data.gz", buffer_it, buffer_it+size-10);
         out = inflate_stream(buffer_it);
         advance(buffer_it, size - 10);
     } else {
+        dump_bytes("data.gz", buffer_it, buffer_it+size-6);
         out = inflate_stream(buffer_it);
         advance(buffer_it, size - 6);
     }
