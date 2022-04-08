@@ -3,14 +3,15 @@
 #include <map>
 
 #include "huffmanutils.h"
+#include "deflateutils.h"
 
 HuffmanNode::HuffmanNode() {
-    left = std::shared_ptr<HuffmanNode>(nullptr);
-    right = std::shared_ptr<HuffmanNode>(nullptr);
+    left = HuffmanTree(nullptr);
+    right = HuffmanTree(nullptr);
     symbol = -1;
 }
 
-std::shared_ptr<HuffmanNode> HuffmanNode::traverse_once(bool direction) {
+HuffmanTree HuffmanNode::traverse_once(bool direction) {
     if (direction == 0)
         return left;
     else
@@ -90,7 +91,7 @@ std::vector<SymbolCode> get_huffman_codes(std::vector<SymbolLength> symbol_lengt
     return symbol_code;
 }
 
-std::vector<SymbolCode> get_deflate_huffman_codes() {
+std::vector<SymbolCode> get_deflate_literal_length_huffman_codes() {
     std::vector<SymbolLength> symbol_length (288);
     for (int symbol = 0; symbol <= 143; symbol++) {
         symbol_length[symbol] = {
@@ -119,9 +120,30 @@ std::vector<SymbolCode> get_deflate_huffman_codes() {
     return get_huffman_codes(symbol_length);
 }
 
-std::shared_ptr<HuffmanNode> get_deflate_huffman_node() {
-    std::vector<SymbolCode> symbol_code = get_deflate_huffman_codes();
-    std::shared_ptr<HuffmanNode> root = std::make_shared<HuffmanNode>();
+HuffmanTree get_deflate_literal_length_huffman_node() {
+    std::vector<SymbolCode> symbol_code = get_deflate_literal_length_huffman_codes();
+    HuffmanTree root = std::make_shared<HuffmanNode>();
+    for (auto it : symbol_code) {
+        root->traverse_create(it.code.begin(), it.code.end(), it.symbol);
+    }
+    return root;
+}
+
+std::vector<SymbolCode> get_deflate_dist_huffman_codes() {
+    std::vector<SymbolLength> symbol_length (32);
+    for (int symbol = 0; symbol < 32; symbol++) {
+        symbol_length[symbol] = {
+            symbol,
+            5
+        };
+    }
+    return get_huffman_codes(symbol_length);
+
+}
+
+HuffmanTree get_deflate_dist_huffman_node() {
+    std::vector<SymbolCode> symbol_code = get_deflate_dist_huffman_codes();
+    HuffmanTree root = std::make_shared<HuffmanNode>();
     for (auto it : symbol_code) {
         root->traverse_create(it.code.begin(), it.code.end(), it.symbol);
     }

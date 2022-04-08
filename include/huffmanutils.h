@@ -3,6 +3,8 @@
 
 #pragma once
 
+typedef int HuffmanSymbol;
+
 class HuffmanNode {
     private:
         std::shared_ptr<HuffmanNode> left;
@@ -15,17 +17,23 @@ class HuffmanNode {
         void traverse_create(std::vector<bool>::iterator first, std::vector<bool>::iterator last, int symbol);
 };
 
+typedef std::shared_ptr<HuffmanNode> HuffmanTree;
+
 struct SymbolLength {
-    int symbol;
+    HuffmanSymbol symbol;
     int length;
 };
 
 struct SymbolCode {
-    int symbol;
+    HuffmanSymbol symbol;
     std::vector<bool> code;
 };
 
 std::vector<SymbolCode> get_huffman_codes(std::vector<SymbolLength> symbol_lengths);
 
-std::vector<SymbolCode> get_deflate_huffman_codes();
-std::shared_ptr<HuffmanNode> get_deflate_huffman_node();
+std::vector<SymbolCode> get_deflate_literal_length_huffman_codes();
+HuffmanTree get_deflate_literal_length_huffman_node();
+
+
+std::vector<SymbolCode> get_deflate_dist_huffman_codes();
+HuffmanTree get_deflate_dist_huffman_node();

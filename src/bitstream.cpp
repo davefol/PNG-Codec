@@ -5,7 +5,7 @@
 // Creates a number out of a range of bits from
 // a byte stream. Numbers do not have to fall
 // on byte boundaries.
-uint64_t slice_bits(int start, int end, std::vector<uint8_t>::iterator &buffer_it) {
+uint64_t slice_bits(int start, int end, const std::vector<uint8_t>::iterator& buffer_it) {
     int byte_offset = start / 8;
     int bit_offset = start % 8;
     int power_of_2 = 1;
