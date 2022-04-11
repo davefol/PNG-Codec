@@ -100,7 +100,7 @@ int parse_length_code(
 #endif
                     return pos;
                 } else if (current_node->symbol == 18) {
-                    uint8_t times_0 = slice_bits(pos, pos+7, buffer_it) + 3;
+                    uint8_t times_0 = slice_bits(pos, pos+7, buffer_it) + 11;
                     pos+=7;
                     for (int i = 0; i < times_0; i++) {
                         code_lengths.push_back(0);
