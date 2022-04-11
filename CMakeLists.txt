@@ -10,6 +10,7 @@ set(
     SRCFILES
     src/IDAT.cpp
     src/IHDR.cpp
+    src/PLTE.cpp
     src/ImagePartial.cpp
     src/ImageVector.cpp
     src/UnknownChunk.cpp
@@ -26,6 +27,7 @@ set (
     include/Chunk.h
     include/IDAT.h
     include/IHDR.h
+    include/PLTE.h
     include/ImagePartial.h
     include/ImageVector.h
     include/UnknownChunk.h

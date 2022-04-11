@@ -14,6 +14,7 @@ ImagePartial::ImagePartial() {
 
 void ImagePartial::set_next_pixel(uint32_t pixel) {
     image_data[next_pixel_pos.height][next_pixel_pos.width] = pixel;
+    advance();
 }
 
 void ImagePartial::advance() {
@@ -30,5 +31,6 @@ void ImagePartial::advance() {
 }
 
 std::vector<std::vector<uint32_t>> ImagePartial::get_image() {
+    // TODO: actually implement this
     return image_data; 
 }

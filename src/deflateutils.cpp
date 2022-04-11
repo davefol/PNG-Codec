@@ -261,9 +261,6 @@ std::vector<uint8_t> inflate_stream(std::vector<uint8_t>::iterator &buffer_it) {
                         // if we have decoded a symbol
                         next_bit = (bool)slice_bits(pos, pos+1, buffer_it);
                         pos++;
-#if DEBUG 
-                        std::cout << "next_bit :" << (int)next_bit << std::endl;
-#endif
                         current_node = current_node->traverse_once(next_bit);
                         if (current_node->symbol != -1) {
                             // if value is less than 256 copy to output stream
@@ -275,7 +272,7 @@ std::vector<uint8_t> inflate_stream(std::vector<uint8_t>::iterator &buffer_it) {
                 // if literal copy to output stream
                 if (decoded_symbol < 256) {
 #if DEBUG
-                    std::cout << "decoded literal: " << std::setw(2) << std::setfill('0') << std::hex << decoded_symbol << std::dec << std::endl;
+                    std::cout << "literal " << decoded_symbol << std::endl;
 #endif
                     out.push_back((uint8_t)decoded_symbol);
                 } else if (decoded_symbol == 256) {
@@ -285,18 +282,12 @@ std::vector<uint8_t> inflate_stream(std::vector<uint8_t>::iterator &buffer_it) {
                     break;
                 } else {
                     // Read extra bits for length code
-#if DEBUG
-                    std::cout << "Decoded length symbol = " << decoded_symbol << std::endl;
-#endif
                     int length_code = decoded_symbol - 257;
-                    int length = 
-                        length_info[length_code].length +
-                        slice_bits(pos, pos+length_info[length_code].extra_bits, buffer_it);
-                    pos+= length_info[length_code].extra_bits;
-
-#if DEBUG
-                    std::cout << "Decoded length = " << length << std::endl;
-#endif
+                    int length = length_info[length_code].length;
+                    if (length_info[length_code].extra_bits) {
+                        length += slice_bits(pos, pos+length_info[length_code].extra_bits, buffer_it);
+                        pos += length_info[length_code].extra_bits;
+                    }
 
                     // decode distance bits
                     int distance;
@@ -304,9 +295,6 @@ std::vector<uint8_t> inflate_stream(std::vector<uint8_t>::iterator &buffer_it) {
                     while (true) {
                         next_bit = (bool)slice_bits(pos, pos+1, buffer_it);
                         pos++;
-#if DEBUG
-                        std::cout << "next distance bit = " << (int)next_bit << std::endl;
-#endif
                         current_node = current_node->traverse_once(next_bit);
                         if (current_node->symbol != -1) {
                             // read the next n bits 
@@ -329,8 +317,7 @@ std::vector<uint8_t> inflate_stream(std::vector<uint8_t>::iterator &buffer_it) {
                     uint8_t byte_to_copy = *(out.end() - distance);
                     out.insert(out.end(), length, byte_to_copy);
 #if DEBUG
-                    std::cout << "Copied " << std::setw(2) << std::setfill('0') << std::hex << (int)byte_to_copy << std::dec;
-                    std::cout << " " << length << " times." << std::endl;
+                    std::cout << "match " << length << " " << distance << std::endl;
 #endif
                 }
             }

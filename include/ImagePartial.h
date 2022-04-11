@@ -17,6 +17,9 @@ class ImagePartial {
         int compression_method;
         int filler_method;
         int interlace_method;
+
+        std::vector<uint32_t> palette;
+
         PixelPos next_pixel_pos;
         std::vector<std::vector<uint32_t>> image_data;
         ImagePartial();

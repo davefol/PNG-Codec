@@ -8,10 +8,12 @@
 #include "Chunk.h"
 #include "IHDR.h"
 #include "IDAT.h"
+#include "PLTE.h"
 #include "UnknownChunk.h"
 #include "consume.h"
 #include "huffmanutils.h"
 #include "ImagePartial.h"
+#include "dumputils.h"
 
 using namespace std;
 
@@ -69,9 +71,9 @@ unique_ptr<Chunk> consume_chunk(vector<uint8_t>::iterator &buffer_it) {
         case __IDAT:
             return make_unique<IDAT>(chunk_size, chunk_name_str, buffer_it);
             break;
-        //case __PLTE:
-        //    // do stuff
-        //    break;
+        case __PLTE:
+            return make_unique<PLTE>(chunk_size, chunk_name_str, buffer_it);
+            break;
         //case __IEND:
         //    // do stuff
         //    break;
@@ -79,8 +81,6 @@ unique_ptr<Chunk> consume_chunk(vector<uint8_t>::iterator &buffer_it) {
             return make_unique<UnknownChunk>(chunk_size, chunk_name_str, buffer_it);
 
     }
-    
-    // read CRC
 }
 
 void display_image(vector<vector<uint32_t>> img) {
@@ -143,7 +143,7 @@ void display_image(vector<vector<uint32_t>> img) {
 
 int main(int argc, char* args[]) {
 
-    ifstream input("./examples/smile.png", ios::binary);
+    ifstream input(args[1], ios::binary);
     vector<uint8_t> buffer(std::istreambuf_iterator<char>(input), {});
     cout << "size of image " << buffer.size() << endl;
 
@@ -178,6 +178,9 @@ int main(int argc, char* args[]) {
     }
     // after the above while loop
     // image partial should be a well behaved in memory image
+
+    std::vector<std::vector<uint32_t>> final_img = image_partial.get_image();
+    //dump_bytes("img.raw", final_img.begin(), final_img.end());
     display_image(image_partial.get_image());
     return 0;
 }
