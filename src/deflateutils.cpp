@@ -20,6 +20,7 @@ int huffman_tree_from_length(
     while(code_lengths.size() < n) {
         pos = parse_length_code(code_length_huffman_tree, pos, buffer_it, code_lengths);
     }
+    std::cout << "parsed all length codes" << std::endl;
     std::vector<SymbolLength> codes_with_symbols;
     for (int symbol = 0; symbol < n; symbol++) {
         codes_with_symbols.push_back({
@@ -31,13 +32,6 @@ int huffman_tree_from_length(
     std::cout << "Initializing huffman tree" << std::endl;
 #endif 
     for (auto it : huffman_code) {
-#if DEBUG
-        std::cout << "Symbol: " << it.symbol << std::endl;
-        std::cout << "code" << "(" << it.code.size() << "): ";
-        for (auto it2: it.code)
-            std::cout << (int)it2;
-        std::cout << std::endl;
-#endif
         out->traverse_create(it.code.begin(), it.code.end(), it.symbol);
     }
 #if DEBUG
@@ -59,10 +53,18 @@ int parse_length_code(
     auto current_node = huffman_tree;
     // we advance each time we reach a leaf node in our Huffman tree
     while (true) {
+        std::cout << "about to slice bit" << std::endl;
+        std::cout << pos << " " << std::endl;
         next_bit = (bool)slice_bits(pos, pos+1, buffer_it);
+        std::cout << "got next bit" << std::endl;
         pos++;
+        std::cout <<  "about to tarverse tree" << std::endl;
         current_node = current_node->traverse_once(next_bit);
+        std::cout << (current_node == nullptr);
+        std::cout << "made it here!" << std::endl;
+        std::cout << "next_bit: " << (int)next_bit << std::endl;
         if (current_node->symbol != -1) {
+            std::cout << "found a symbol!" << std::endl;
             if (current_node->symbol < 16) {
                 code_lengths.push_back(current_node->symbol);
 #if DEBUG
@@ -141,8 +143,6 @@ std::vector<uint8_t> inflate_stream(std::vector<uint8_t>::iterator &buffer_it) {
             pos += remaining_bits;
             uint16_t len = slice_bits(pos, pos+16, buffer_it);
             pos += 16;
-            //uint16_t nlen = slice_bits(pos, pos+16, buffer_it);
-            pos += 16;
             for (uint16_t i = 0; i < len; i++) {
                 uint8_t copy_byte = slice_bits(pos, pos+16, buffer_it);
                 pos += 16;
@@ -194,18 +194,19 @@ std::vector<uint8_t> inflate_stream(std::vector<uint8_t>::iterator &buffer_it) {
                     };
                     pos+= 3;
                 }
+#if DEBUG
+                std::cout << "Code Length length" << std::endl;
+                for (auto it : code_length_symbol_length) {
+                    if (it.length > 0)
+                        std::cout << "code " << it.symbol << " " << it.length << std::endl;
+                }
+#endif
                 // Huffman lengths need to be lexograpgically sorted according to zlib spec.
                 std::sort(code_length_symbol_length.begin(), code_length_symbol_length.end(), 
                     [](auto a, auto b) -> bool {
                         return a.symbol < b.symbol;
                     }
                 );
-#if DEBUG
-                std::cout << "Code Length length" << std::endl;
-                for (auto it : code_length_symbol_length) {
-                    std::cout << it.symbol << " " << it.length << std::endl;
-                }
-#endif
                 // For code lengths:
                 //     Create a Huffman Binary Tree from the Huffman Codes 
                 std::vector<SymbolCode> code_length_huffman_codes = get_huffman_codes(code_length_symbol_length);
@@ -215,7 +216,7 @@ std::vector<uint8_t> inflate_stream(std::vector<uint8_t>::iterator &buffer_it) {
                 }
 
 #if DEBUG
-                std::cout << "Hufman codes" << std::endl;
+                std::cout << "Huffman codes" << std::endl;
                 for (auto it : code_length_huffman_codes) {
                     std::cout << it.symbol << " ";
                     for (auto bit: it.code) {
@@ -242,6 +243,7 @@ std::vector<uint8_t> inflate_stream(std::vector<uint8_t>::iterator &buffer_it) {
 
 
                 // at this point the literal/length and distance huffman trees are fully initialized.
+                std::cout << "*************" << std::endl;
 
                     
             }
@@ -314,8 +316,18 @@ std::vector<uint8_t> inflate_stream(std::vector<uint8_t>::iterator &buffer_it) {
                     // we go back distance bytes
                     // and repeat that byte length times
                     // at the end of our output stream
-                    uint8_t byte_to_copy = *(out.end() - distance);
-                    out.insert(out.end(), length, byte_to_copy);
+                    //
+                    // Note also that the referenced string may overlap the current
+                    // position; for example, if the last 2 bytes decoded have values
+                    // X and Y, a string reference with <length = 5, distance = 2>
+                    // adds X,Y,X,Y,X to the output stream.
+                    
+                    int pick_point = std::distance(out.begin(), out.end() - distance);
+                    for (int i = 0; i < length; i++) {
+                        out.push_back(out[pick_point]);
+                        pick_point++;
+                    }
+                    //out.insert(out.end(), out.end()-distance, out.end()-distance+length);
 #if DEBUG
                     std::cout << "match " << length << " " << distance << std::endl;
 #endif

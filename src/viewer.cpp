@@ -27,6 +27,22 @@ using namespace std;
 #define __IDAT 0x49444154
 #define __IEND 0x49454e44
 
+std::vector<std::vector<uint64_t>> pack_image(std::vector<std::vector<std::vector<uint16_t>>> img) {
+    std::vector<std::vector<uint64_t>> out;
+    for (int y = 0; y < img.size(); y++) {
+        std::vector<uint64_t> scanline;
+        for (int x = 0; x < img[y].size(); x++) {
+            uint64_t pixel = 0;
+            for (int c = 0; c < 4; c++) {
+                pixel |= img[y][x][c] << (8 * c);
+            }
+            scanline.push_back(pixel);
+        }
+        out.push_back(scanline);
+    }
+    return out;
+}
+
 void set_pixel(SDL_Surface *surface, int x, int y, uint32_t pixel)
 {
   uint32_t * const target_pixel = (uint32_t *) ((uint8_t *) surface->pixels
@@ -35,7 +51,7 @@ void set_pixel(SDL_Surface *surface, int x, int y, uint32_t pixel)
   *target_pixel = pixel;
 }
 
-void set_pixels(SDL_Surface *surface, vector<vector<uint32_t>> img) {
+void set_pixels(SDL_Surface *surface, vector<vector<uint64_t>> img) {
     for (int y = 0; y < img.size(); y++)
         for (int x = 0; x < img[y].size(); x++)
             set_pixel(surface, x, y, img[y][x]);
@@ -47,7 +63,7 @@ void print_hex(uint8_t c) {
     cout << setw(2) << setfill('0') << hex << (int)c << dec << " ";
 } 
 
-unique_ptr<Chunk> consume_chunk(vector<uint8_t>::iterator &buffer_it) {
+unique_ptr<Chunk> consume_chunk(vector<uint8_t>::iterator &buffer_it, vector<uint8_t>& idat_buffer) {
     // read size
     uint32_t chunk_size = consume_uint32_t(buffer_it);
     // read name
@@ -61,19 +77,18 @@ unique_ptr<Chunk> consume_chunk(vector<uint8_t>::iterator &buffer_it) {
         (char)((chunk_name & (0xFF << 8 * 0)) >> 0), // fourth byte
     };
     string chunk_name_str = string(vec_char_name.begin(), vec_char_name.end());
+    std::cout << chunk_name_str << " " << (int)chunk_size;
 
     // dispatch on name
     switch (chunk_name) {
         case __IHDR:
             // do stuff
             return make_unique<IHDR>(chunk_size, chunk_name_str, buffer_it);
-            break;
         case __IDAT:
-            return make_unique<IDAT>(chunk_size, chunk_name_str, buffer_it);
-            break;
+            idat_buffer.insert(idat_buffer.end(), buffer_it, buffer_it+chunk_size);
+            return make_unique<UnknownChunk>(chunk_size, chunk_name_str, buffer_it);
         case __PLTE:
             return make_unique<PLTE>(chunk_size, chunk_name_str, buffer_it);
-            break;
         //case __IEND:
         //    // do stuff
         //    break;
@@ -83,7 +98,7 @@ unique_ptr<Chunk> consume_chunk(vector<uint8_t>::iterator &buffer_it) {
     }
 }
 
-void display_image(vector<vector<uint32_t>> img) {
+void display_image(vector<vector<uint64_t>> img) {
     // ======================================
     // --------- Displaying Image -----------
     // ======================================
@@ -168,19 +183,31 @@ int main(int argc, char* args[]) {
     ImagePartial image_partial = {
         
     };
+    std::vector<uint8_t> idat_buffer;
     while (buffer_it != buffer.end()) {
-        auto chunk_ptr = consume_chunk(buffer_it);
+        auto chunk_ptr = consume_chunk(buffer_it, idat_buffer);
         cout << "Chunk name: " << chunk_ptr->name << endl;
         cout << "Chunk size: " << chunk_ptr->size << endl;
         chunk_ptr->print();
         chunk_ptr->modify(image_partial);
         cout << endl;
     }
+    auto idat_buffer_it = idat_buffer.begin();
+    auto idat_chunk = make_unique<IDAT>(idat_buffer.size(), "IDAT", idat_buffer_it);
+    idat_chunk->print();
+    idat_chunk->modify(image_partial);
     // after the above while loop
     // image partial should be a well behaved in memory image
 
-    std::vector<std::vector<uint32_t>> final_img = image_partial.get_image();
+    image_partial.generate_image();
+    std::vector<std::vector<uint64_t>> final_img = pack_image(image_partial.get_image());
     //dump_bytes("img.raw", final_img.begin(), final_img.end());
-    display_image(image_partial.get_image());
+    std::string infgen_true = "";
+    if (argc > 2)
+        infgen_true = args[2];
+    if (infgen_true == "--infgen") {
+    } else {
+        display_image(final_img);
+    }
     return 0;
 }

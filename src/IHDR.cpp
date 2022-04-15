@@ -40,5 +40,5 @@ void IHDR::modify(ImagePartial& image_partial) {
    image_partial.next_pixel_pos = {0, 0};
 
    // allocate space for the actual image data
-   image_partial.image_data.resize(height, std::vector<uint32_t>(width));
+   image_partial.image_data.resize(height, std::vector<std::vector<uint16_t>>(width));
 }
