@@ -37,3 +37,8 @@ build/
 # Mac OS specific
 .DS_Store
 data.gz
+
+.cache
+*.raw
+*.infgen
+*.gz

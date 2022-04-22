@@ -53,18 +53,11 @@ int parse_length_code(
     auto current_node = huffman_tree;
     // we advance each time we reach a leaf node in our Huffman tree
     while (true) {
-        std::cout << "about to slice bit" << std::endl;
-        std::cout << pos << " " << std::endl;
         next_bit = (bool)slice_bits(pos, pos+1, buffer_it);
-        std::cout << "got next bit" << std::endl;
         pos++;
-        std::cout <<  "about to tarverse tree" << std::endl;
         current_node = current_node->traverse_once(next_bit);
         std::cout << (current_node == nullptr);
-        std::cout << "made it here!" << std::endl;
-        std::cout << "next_bit: " << (int)next_bit << std::endl;
         if (current_node->symbol != -1) {
-            std::cout << "found a symbol!" << std::endl;
             if (current_node->symbol < 16) {
                 code_lengths.push_back(current_node->symbol);
 #if DEBUG
@@ -139,13 +132,28 @@ std::vector<uint8_t> inflate_stream(std::vector<uint8_t>::iterator &buffer_it) {
         // if stored with no compression
         if (btype == 0) {
             // skip any remanining bits in partially processed byte
-            uint8_t remaining_bits = 8 - pos % 8;
+#if DEBUG
+            std::cout << "pos at start of uncompressed chunk: " << (int)pos << std::endl;
+#endif
+            uint8_t remaining_bits = 8 - (pos % 8);
             pos += remaining_bits;
+#if DEBUG
+            std::cout << (int)remaining_bits << std::endl;
+#endif
+
             uint16_t len = slice_bits(pos, pos+16, buffer_it);
             pos += 16;
+            uint16_t nlen = slice_bits(pos, pos+16, buffer_it);
+            pos += 16;
+
+#if DEBUG
+            std::cout << "remaining bits: " << (int)remaining_bits << std::endl;
+            std::cout << "len: " << int(len) << std::endl;
+            std::cout << "~nlen: " << int(~nlen) << std::endl;
+#endif
             for (uint16_t i = 0; i < len; i++) {
-                uint8_t copy_byte = slice_bits(pos, pos+16, buffer_it);
-                pos += 16;
+                uint8_t copy_byte = slice_bits(pos, pos+8, buffer_it);
+                pos += 8;
                 out.push_back(copy_byte);
             }
 
@@ -162,7 +170,6 @@ std::vector<uint8_t> inflate_stream(std::vector<uint8_t>::iterator &buffer_it) {
             // if stored with dynamic Huffman codes (btype = 2)
             else {
                 // read representation of code trees.
-                // TODO
                 uint8_t hlit = slice_bits(pos, pos+5, buffer_it);
                 pos+= 5;
                 int n_literal_length_codes = hlit + 257;
@@ -244,8 +251,6 @@ std::vector<uint8_t> inflate_stream(std::vector<uint8_t>::iterator &buffer_it) {
 
                 // at this point the literal/length and distance huffman trees are fully initialized.
                 std::cout << "*************" << std::endl;
-
-                    
             }
 
             // loop until end of block code (256) is recognized
@@ -257,18 +262,26 @@ std::vector<uint8_t> inflate_stream(std::vector<uint8_t>::iterator &buffer_it) {
             bool next_bit;
             while (true) {
                 // We are in Huffman code teritory!!!
-                    // decode literal/length value from input stream
-                    current_node = literal_length_huffman_tree;
-                    while (true) {
-                        // if we have decoded a symbol
-                        next_bit = (bool)slice_bits(pos, pos+1, buffer_it);
-                        pos++;
-                        current_node = current_node->traverse_once(next_bit);
-                        if (current_node->symbol != -1) {
-                            // if value is less than 256 copy to output stream
-                            decoded_symbol = current_node->symbol;
-                            current_node = literal_length_huffman_tree;
-                            break;
+                // decode literal/length value from input stream
+                current_node = literal_length_huffman_tree;
+                while (true) {
+                    // if we have decoded a symbol
+                    next_bit = (bool)slice_bits(pos, pos+1, buffer_it);
+                    pos++;
+#if DEBUG
+                    if (btype == 1)
+                        std::cout << (int)next_bit;
+#endif
+                    current_node = current_node->traverse_once(next_bit);
+                    if (current_node->symbol != -1) {
+                        // if value is less than 256 copy to output stream
+                        decoded_symbol = current_node->symbol;
+                        current_node = literal_length_huffman_tree;
+#if DEBUG
+                        if (btype == 1)
+                            std::cout << " " << std::endl;
+#endif
+                        break;
                     }
                 }
                 // if literal copy to output stream

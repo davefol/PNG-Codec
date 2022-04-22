@@ -17,6 +17,10 @@ class ImagePartial {
         int compression_method;
         int filler_method;
         int interlace_method;
+        std::vector<std::vector<std::vector<PixelPos>>> passes;
+        int pass_index;
+        int scanline_index;
+        int scanline_x_index;
         std::vector<uint8_t> uncompressed_bytes;
 
         std::vector<uint32_t> palette;
@@ -33,5 +37,7 @@ class ImagePartial {
         void modify_3();
         void modify_4();
         void modify_6();
+
+        std::vector<uint16_t> get_pixel_at(int si, int sxi);
 };
 

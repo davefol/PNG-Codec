@@ -33,7 +33,7 @@ std::vector<std::vector<uint64_t>> pack_image(std::vector<std::vector<std::vecto
         std::vector<uint64_t> scanline;
         for (int x = 0; x < img[y].size(); x++) {
             uint64_t pixel = 0;
-            for (int c = 0; c < 4; c++) {
+            for (int c = 0; c < img[y][x].size(); c++) {
                 pixel |= img[y][x][c] << (8 * c);
             }
             scanline.push_back(pixel);
@@ -51,11 +51,23 @@ void set_pixel(SDL_Surface *surface, int x, int y, uint32_t pixel)
   *target_pixel = pixel;
 }
 
+void set_all_scanline(SDL_Surface *surface, vector<uint64_t> img) {
+    uint32_t * const target = (uint32_t *) ((uint8_t *) surface->pixels);
+    std::copy(img.begin(), img.end(), target);
+}
+
+void set_scanline(SDL_Surface *surface, int y, vector<uint64_t> scanline) {
+    uint32_t * const target_scanline = (uint32_t *) ((uint8_t *) surface->pixels + y * surface-> pitch);
+    std::copy(scanline.begin(), scanline.end(), target_scanline);
+}
+
 void set_pixels(SDL_Surface *surface, vector<vector<uint64_t>> img) {
     for (int y = 0; y < img.size(); y++)
-        for (int x = 0; x < img[y].size(); x++)
-            set_pixel(surface, x, y, img[y][x]);
+        set_scanline(surface, y, img[y]);
+        //for (int x = 0; x < img[y].size(); x++)
+        //    set_pixel(surface, x, y, img[y][x]);
 }
+
 
 
 
@@ -122,6 +134,7 @@ void display_image(vector<vector<uint64_t>> img) {
             img.size(),
             SDL_WINDOW_SHOWN
         );
+        SDL_SetWindowResizable(window, SDL_TRUE);
 
         if (window == NULL) {
             cout << SDL_GetError() << endl;
@@ -195,18 +208,24 @@ int main(int argc, char* args[]) {
     auto idat_buffer_it = idat_buffer.begin();
     auto idat_chunk = make_unique<IDAT>(idat_buffer.size(), "IDAT", idat_buffer_it);
     idat_chunk->print();
+    std::cout << "calling final IDAT modify" << std::endl;
     idat_chunk->modify(image_partial);
+    std::cout << "finished final IDAT modify" << std::endl;
     // after the above while loop
     // image partial should be a well behaved in memory image
 
+    std::cout << "Generating image" << std::endl;
     image_partial.generate_image();
+    std::cout << "Packing image" << std::endl;
     std::vector<std::vector<uint64_t>> final_img = pack_image(image_partial.get_image());
+    std::cout << "Finished packing image" << std::endl;
     //dump_bytes("img.raw", final_img.begin(), final_img.end());
     std::string infgen_true = "";
     if (argc > 2)
         infgen_true = args[2];
     if (infgen_true == "--infgen") {
     } else {
+        std::cout << "Displaying image" << std::endl;
         display_image(final_img);
     }
     return 0;

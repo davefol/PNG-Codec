@@ -55,7 +55,7 @@ std::vector<uint8_t> uncompress_zlib_stream(int size, std::vector<uint8_t>::iter
         out = inflate_stream(buffer_it);
         advance(buffer_it, size - 6);
     }
-    dump_bytes("data.raw", out.begin(), out.end());
+    //dump_bytes("data.raw", out.begin(), out.end());
     
 
     uint32_t check_value = consume_uint32_t(buffer_it);
